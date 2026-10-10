@@ -194,7 +194,8 @@ inline std::vector<StrId> homeThemeValues() {
   // it the entry stays (Shelf comes after it) and setTheme falls back to Lyra.
   static constexpr StrId VALUES[] = {StrId::STR_THEME_CLASSIC,       StrId::STR_THEME_LYRA,
                                      StrId::STR_THEME_LYRA_EXTENDED, StrId::STR_THEME_ROUNDEDRAFF,
-                                     StrId::STR_THEME_COVER_GRID,    StrId::STR_THEME_SHELF};
+                                     StrId::STR_THEME_COVER_GRID,    StrId::STR_THEME_SHELF,
+                                     StrId::STR_THEME_TABBY_CAFE};
   return {VALUES, VALUES + std::size(VALUES)};
 }
 

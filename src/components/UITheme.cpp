@@ -18,6 +18,7 @@
 #include "components/themes/lyra/LyraTheme.h"
 #include "components/themes/roundedraff/RoundedRaffTheme.h"
 #include "components/themes/shelf/ShelfTheme.h"
+#include "components/themes/tabby/TabbyCafeTheme.h"
 
 UITheme UITheme::instance;
 
@@ -73,6 +74,11 @@ void UITheme::setTheme(CrossPointSettings::UI_THEME type) {
       LOG_DBG("UI", "Using Shelf theme");
       currentTheme = std::make_unique<ShelfTheme>();
       currentMetrics = &ShelfMetrics::values;
+      break;
+    case CrossPointSettings::UI_THEME::TABBY_CAFE:
+      LOG_DBG("UI", "Using TabbyCafe theme");
+      currentTheme = std::make_unique<TabbyCafeTheme>();
+      currentMetrics = &TabbyCafeMetrics::values;
       break;
   }
   metricsValid = false;

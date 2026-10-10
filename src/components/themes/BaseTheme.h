@@ -294,6 +294,9 @@ class BaseTheme {
   // Home menu columns. Cells are laid out left to right, then top to bottom,
   // with metrics.menuSpacing between them in both directions.
   virtual int homeMenuColumns() const { return 1; }
+  // Scene homes place each menu item on a picture: the screen rect of the item
+  // with this icon. Home hit-tests touches against it; false = not a scene.
+  virtual bool homeMenuHotspot(const GfxRenderer&, UIIcon, Rect&) const { return false; }
 
   // Shared constants and helpers for battery drawing (used by all themes)
   static constexpr int batteryPercentSpacing = 4;

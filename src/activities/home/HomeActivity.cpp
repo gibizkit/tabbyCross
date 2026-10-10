@@ -405,6 +405,42 @@ void HomeActivity::loop() {
     return;
   }
 
+  // Scene homes (TabbyCafe): hit-test each item's hotspot instead of rows.
+  int touchX = 0;
+  int touchY = 0;
+  const bool touchDown = mappedInput.wasScreenTouchDown(touchX, touchY);
+  if (touchDown || mappedInput.wasScreenTapped(touchX, touchY)) {
+    std::vector<const char*> items;
+    std::vector<UIIcon> icons;
+    buildMenu(items, icons);
+    bool isScene = false;
+    for (int i = 0; i < static_cast<int>(icons.size()); ++i) {
+      Rect spot;
+      if (!GUI.homeMenuHotspot(renderer, icons[i], spot)) continue;
+      isScene = true;
+      if (touchX < spot.x || touchX >= spot.x + spot.width || touchY < spot.y || touchY >= spot.y + spot.height) {
+        continue;
+      }
+      const int index = metrics.homeContinueReadingInMenu ? i : i + static_cast<int>(recentBooks.size());
+      if (touchDown) {
+        if (selectorIndex != index) {
+          selectorIndex = index;
+          requestUpdate();
+        }
+      } else {
+        selectorIndex = index;
+        haptic_feedback::touchAction();
+        activateSelection();
+      }
+      return;
+    }
+    // A touch between objects selects nothing; skip the row hit-test below.
+    if (isScene) {
+      if (mappedInput.wasReleased(MappedInputManager::Button::Confirm)) activateSelection();
+      return;
+    }
+  }
+
   // Match the rendered cover grid, which lays tiles inside getContentArea()
   // (origin content.x + contentSidePadding, span content.width). Using
   // screen-relative getScreenWidth()/contentSidePadding here offset the touch
@@ -479,6 +515,22 @@ void HomeActivity::loop() {
   }
 }
 
+void HomeActivity::buildMenu(std::vector<const char*>& items, std::vector<UIIcon>& icons) const {
+  items = {tr(STR_BROWSE_FILES), tr(STR_LIBRARY), tr(STR_FILE_TRANSFER), tr(STR_SETTINGS_TITLE)};
+  icons = {Folder, Library, Transfer, Settings};
+
+  if (hasLibrarySlot()) {
+    items.insert(items.begin() + 2, hasPlugins ? tr(STR_PLUGINS) : tr(STR_OPDS_BROWSER));
+    icons.insert(icons.begin() + 2, Plugins);
+  }
+
+  if (UITheme::getInstance().getMetrics().homeContinueReadingInMenu && !recentBooks.empty()) {
+    // Insert Continue Reading at the top if enabled in theme
+    items.insert(items.begin(), tr(STR_CONTINUE_READING));
+    icons.insert(icons.begin(), Book);
+  }
+}
+
 void HomeActivity::render(RenderLock&&) {
   const auto& metrics = UITheme::getInstance().getMetrics();
   const auto pageWidth = renderer.getScreenWidth();
@@ -539,21 +591,9 @@ void HomeActivity::render(RenderLock&&) {
                           recentBooks, selectorIndex, coverRendered, coverBufferStored, bufferRestored,
                           std::bind(&HomeActivity::storeCoverBuffer, this));
 
-  // Build menu items dynamically
-  std::vector<const char*> menuItems = {tr(STR_BROWSE_FILES), tr(STR_LIBRARY), tr(STR_FILE_TRANSFER),
-                                        tr(STR_SETTINGS_TITLE)};
-  std::vector<UIIcon> menuIcons = {Folder, Library, Transfer, Settings};
-
-  if (hasLibrarySlot()) {
-    menuItems.insert(menuItems.begin() + 2, hasPlugins ? tr(STR_PLUGINS) : tr(STR_OPDS_BROWSER));
-    menuIcons.insert(menuIcons.begin() + 2, Plugins);
-  }
-
-  if (metrics.homeContinueReadingInMenu && !recentBooks.empty()) {
-    // Insert Continue Reading at the top if enabled in theme
-    menuItems.insert(menuItems.begin(), tr(STR_CONTINUE_READING));
-    menuIcons.insert(menuIcons.begin(), Book);
-  }
+  std::vector<const char*> menuItems;
+  std::vector<UIIcon> menuIcons;
+  buildMenu(menuItems, menuIcons);
 
   GUI.drawButtonMenu(
       renderer,
