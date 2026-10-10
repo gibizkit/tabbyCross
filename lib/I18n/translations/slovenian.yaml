@@ -4,6 +4,7 @@ _order: "21"
 _bcp47: "sl"
 
 STR_CROSSPOINT: "CrossPoint"
+STR_APP_NAME: "TabbyCross"
 STR_BOOTING: "ZAGON"
 STR_SLEEPING: "SPANJE"
 STR_ENTERING_SLEEP: "Prehod v spanje"

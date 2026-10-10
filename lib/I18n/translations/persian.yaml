@@ -4,6 +4,7 @@ _order: "35"
 _bcp47: "fa"
 
 STR_CROSSPOINT: "CrossPoint"
+STR_APP_NAME: "TabbyCross"
 STR_BOOTING: "در حال راه‌اندازی"
 STR_SLEEPING: "در حالت خواب"
 STR_ENTERING_SLEEP: "در حال ورود به حالت خواب"

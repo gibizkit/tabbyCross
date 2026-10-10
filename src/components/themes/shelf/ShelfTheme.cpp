@@ -21,7 +21,7 @@ void drawSectionLabel(const GfxRenderer& renderer, const int x, const int bottom
 void ShelfTheme::drawHeader(const GfxRenderer& renderer, Rect rect, const char* title, const char* subtitle,
                             bool backButton) const {
   // Home passes no title; show the firmware name like other readers' home bands.
-  LyraTheme::drawHeader(renderer, rect, title ? title : tr(STR_CROSSPOINT), subtitle, backButton);
+  LyraTheme::drawHeader(renderer, rect, title ? title : tr(STR_APP_NAME), subtitle, backButton);
 }
 
 void ShelfTheme::drawRecentBookCover(GfxRenderer& renderer, Rect rect, const std::vector<RecentBook>& recentBooks,

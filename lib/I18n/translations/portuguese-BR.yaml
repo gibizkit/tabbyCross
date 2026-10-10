@@ -4,6 +4,7 @@ _order: "5"
 _bcp47: "pt-BR"
 
 STR_CROSSPOINT: "CrossPoint"
+STR_APP_NAME: "TabbyCross"
 STR_BOOTING: "INICIANDO"
 STR_SLEEPING: "EM REPOUSO"
 STR_ENTERING_SLEEP: "Entrando em repouso"

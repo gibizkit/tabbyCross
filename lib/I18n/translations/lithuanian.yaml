@@ -4,6 +4,7 @@ _order: "20"
 _bcp47: "lt"
 
 STR_CROSSPOINT: "CrossPoint"
+STR_APP_NAME: "TabbyCross"
 STR_BOOTING: "KRAUNASI"
 STR_SLEEPING: "MIEGA"
 STR_ENTERING_SLEEP: "Užmiegama"

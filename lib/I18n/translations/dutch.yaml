@@ -4,6 +4,7 @@ _order: "16"
 _bcp47: "nl"
 
 STR_CROSSPOINT: "CrossPoint"
+STR_APP_NAME: "TabbyCross"
 STR_BOOTING: "OPSTARTEN"
 STR_SLEEPING: "SLAAPSTAND"
 STR_ENTERING_SLEEP: "Gaat in slaapstand"

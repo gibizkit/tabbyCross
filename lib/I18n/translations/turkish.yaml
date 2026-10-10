@@ -4,6 +4,7 @@ _order: "17"
 _bcp47: "tr"
 
 STR_CROSSPOINT: "CrossPoint"
+STR_APP_NAME: "TabbyCross"
 STR_BOOTING: "BAŞLATILIYOR"
 STR_SLEEPING: "UYKU MODU"
 STR_ENTERING_SLEEP: "Uyku moduna geçiliyor"

@@ -4,6 +4,7 @@ _order: "7"
 _bcp47: "sv"
 
 STR_CROSSPOINT: "CrossPoint"
+STR_APP_NAME: "TabbyCross"
 STR_BOOTING: "STARTAR"
 STR_SLEEPING: "VILA"
 STR_ENTERING_SLEEP: "Går i vila"

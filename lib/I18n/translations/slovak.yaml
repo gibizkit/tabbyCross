@@ -4,6 +4,7 @@ _order: "24"
 _bcp47: "sk"
 
 STR_CROSSPOINT: "CrossPoint"
+STR_APP_NAME: "TabbyCross"
 STR_BOOTING: "SPÚŠŤANIE"
 STR_SLEEPING: "SPÁNOK"
 STR_ENTERING_SLEEP: "Prechod do režimu spánku"
