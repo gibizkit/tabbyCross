@@ -232,3 +232,32 @@ void utf8TruncateChars(std::string& str, const size_t numChars) {
     utf8RemoveLastChar(str);
   }
 }
+
+std::string utf8SplitThaiSaraAm(const std::string& in) {
+  // Thai is U+0E00-0E7F, so every codepoint involved is 3 bytes: E0 B8|B9 xx.
+  static constexpr char kSaraAm[] = "\xE0\xB8\xB3";    // U+0E33
+  static constexpr char kNikhahit[] = "\xE0\xB9\x8D";  // U+0E4D
+  static constexpr char kSaraAa[] = "\xE0\xB8\xB2";    // U+0E32
+  if (in.find(kSaraAm) == std::string::npos) return in;
+
+  const auto isToneMarkAt = [](const std::string& s, const size_t pos) {
+    const auto last = static_cast<unsigned char>(s[pos + 2]);
+    return s[pos] == '\xE0' && s[pos + 1] == '\xB9' && last >= 0x88 && last <= 0x8B;  // U+0E48-0E4B
+  };
+
+  std::string out;
+  out.reserve(in.size() + 3);
+  size_t i = 0;
+  while (i < in.size()) {
+    if (in.compare(i, 3, kSaraAm) != 0) {
+      out.push_back(in[i++]);
+      continue;
+    }
+    size_t insertAt = out.size();
+    while (insertAt >= 3 && isToneMarkAt(out, insertAt - 3)) insertAt -= 3;
+    out.insert(insertAt, kNikhahit);
+    out.append(kSaraAa);
+    i += 3;
+  }
+  return out;
+}

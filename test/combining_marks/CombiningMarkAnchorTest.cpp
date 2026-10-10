@@ -71,3 +71,58 @@ TEST(RaiseAboveBase, CentreRaisedBehaviourUnchanged) {
   // Below-baseline mark (kasra, cedilla): stays at font-native position.
   EXPECT_EQ(raiseAboveBase(Anchor::CenterRaised, 2, 4, 12), 0);
 }
+
+// ============================================================================
+// Thai marks: right-aligned on the consonant, moved off the stem of tall
+// consonants, and a tone mark stacked above an upper vowel on the same base.
+// ============================================================================
+
+using combiningMark::raiseFor;
+using combiningMark::stackTopAfter;
+
+TEST(AnchorFor, ThaiMarks) {
+  EXPECT_EQ(anchorFor(0x0E31), Anchor::ThaiAbove);     // mai han-akat
+  EXPECT_EQ(anchorFor(0x0E34), Anchor::ThaiAbove);     // sara i
+  EXPECT_EQ(anchorFor(0x0E37), Anchor::ThaiAbove);     // sara uee
+  EXPECT_EQ(anchorFor(0x0E48), Anchor::ThaiAbove);     // mai ek
+  EXPECT_EQ(anchorFor(0x0E4C), Anchor::ThaiAbove);     // thanthakhat
+  EXPECT_EQ(anchorFor(0x0E4D), Anchor::ThaiAbove);     // nikhahit
+  EXPECT_EQ(anchorFor(0x0E38), Anchor::ThaiBelow);     // sara u
+  EXPECT_EQ(anchorFor(0x0E3A), Anchor::ThaiBelow);     // phinthu
+  EXPECT_EQ(anchorFor(0x0E01), Anchor::CenterRaised);  // ko kai is not a mark
+}
+
+// Base glyph: cursor 100, left 1, width 12 -> bitmap [101, 113).  Mark: left -6, width 4.
+TEST(AnchorOver, ThaiMarksAlignToConsonantRightEdge) {
+  EXPECT_EQ(anchorOver(Anchor::ThaiAbove, 100, 1, 12, -6, 4, 0x0E01), 109 + 6);  // ก
+  EXPECT_EQ(anchorOver(Anchor::ThaiBelow, 100, 1, 12, -6, 4, 0x0E1B), 109 + 6);  // below mark on ป: no shift
+}
+
+TEST(AnchorOver, ThaiAboveMarkAvoidsTallConsonantStem) {
+  // ป: the mark moves left by a quarter of the base width (12 / 4 = 3).
+  EXPECT_EQ(anchorOver(Anchor::ThaiAbove, 100, 1, 12, -6, 4, 0x0E1B), 106 + 6);
+  EXPECT_EQ(anchorOverRotated90CW(Anchor::ThaiAbove, 100, 1, 12, -6, 4, 0x0E1B), 100 - (106 + 6 - 100));
+}
+
+TEST(RaiseFor, ThaiToneStacksAboveUpperVowel) {
+  // First above mark on the base keeps its font-native height.
+  EXPECT_EQ(raiseFor(Anchor::ThaiAbove, 15, 3, 10, 0), 0);
+  // Tone (top 16, height 3 -> bottom 13) after a vowel whose top is 15:
+  // gap = 13 - 15 = -2 -> raise 3 for a 1px gap.
+  EXPECT_EQ(raiseFor(Anchor::ThaiAbove, 16, 3, 10, 15), 3);
+  // Tone already designed above the vowel: no raise.
+  EXPECT_EQ(raiseFor(Anchor::ThaiAbove, 20, 3, 10, 15), 0);
+  // Below marks never move.
+  EXPECT_EQ(raiseFor(Anchor::ThaiBelow, -1, 3, 10, 15), 0);
+}
+
+TEST(RaiseFor, NonThaiAnchorsMatchRaiseAboveBase) {
+  EXPECT_EQ(raiseFor(Anchor::CenterRaised, 10, 3, 12, 99), raiseAboveBase(Anchor::CenterRaised, 10, 3, 12));
+  EXPECT_EQ(raiseFor(Anchor::CenterNative, 8, 3, 12, 99), 0);
+}
+
+TEST(StackTopAfter, OnlyThaiAboveMarksGrowTheStack) {
+  EXPECT_EQ(stackTopAfter(Anchor::ThaiAbove, 16, 3, 15), 19);
+  EXPECT_EQ(stackTopAfter(Anchor::ThaiBelow, -1, 0, 15), 15);
+  EXPECT_EQ(stackTopAfter(Anchor::CenterRaised, 16, 3, 0), 0);
+}

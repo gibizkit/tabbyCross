@@ -161,3 +161,35 @@ TEST(Utf8ComposeNfcInPlace, PreservesMalformedAndTruncatedBytes) {
   utf8ComposeNfcInPlace(buffer);
   EXPECT_STREQ(buffer, "\xFF\xC3\xA9\xE1\x84");
 }
+
+// ============================================================================
+// Thai sara am split: nikhahit goes before the tone mark, sara aa after.
+// ============================================================================
+
+namespace {
+const std::string kNoNu = "\xE0\xB8\x99";      // U+0E19 น
+const std::string kToTao = "\xE0\xB8\x95";     // U+0E15 ต
+const std::string kMaiTho = "\xE0\xB9\x89";    // U+0E49 ไม้โท
+const std::string kSaraAm = "\xE0\xB8\xB3";    // U+0E33 ำ
+const std::string kNikhahit = "\xE0\xB9\x8D";  // U+0E4D
+const std::string kSaraAa = "\xE0\xB8\xB2";    // U+0E32
+}  // namespace
+
+TEST(Utf8SplitThaiSaraAm, LeavesTextWithoutSaraAmUnchanged) {
+  EXPECT_EQ(utf8SplitThaiSaraAm(""), "");
+  EXPECT_EQ(utf8SplitThaiSaraAm("hello"), "hello");
+  EXPECT_EQ(utf8SplitThaiSaraAm(kNoNu + kMaiTho), kNoNu + kMaiTho);
+}
+
+TEST(Utf8SplitThaiSaraAm, SplitsWithoutToneMark) {
+  // ทำ-like: consonant + sara am.
+  EXPECT_EQ(utf8SplitThaiSaraAm(kToTao + kSaraAm), kToTao + kNikhahit + kSaraAa);
+}
+
+TEST(Utf8SplitThaiSaraAm, MovesNikhahitBeforeToneMark) {
+  // น้ำ: น + ้ + ำ  ->  น + ํ + ้ + า
+  EXPECT_EQ(utf8SplitThaiSaraAm(kNoNu + kMaiTho + kSaraAm), kNoNu + kNikhahit + kMaiTho + kSaraAa);
+  // Two words in one string, surrounded by ASCII.
+  EXPECT_EQ(utf8SplitThaiSaraAm("[" + kNoNu + kMaiTho + kSaraAm + kToTao + kSaraAm + "]"),
+            "[" + kNoNu + kNikhahit + kMaiTho + kSaraAa + kToTao + kNikhahit + kSaraAa + "]");
+}

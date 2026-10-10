@@ -48,7 +48,14 @@ enum class Anchor : uint8_t {
   CenterNative,  ///< centered over the base at font-native height
   RightNative,   ///< right edges aligned, font-native height
   LeftNative,    ///< left edges aligned, font-native height
+  ThaiAbove,     ///< right edges aligned, font-native height, stacked over earlier marks
+  ThaiBelow,     ///< right edges aligned, font-native height
 };
+
+/// Thai consonants whose tall right stem would hit an above mark.
+constexpr bool isThaiTallConsonant(const uint32_t cp) {
+  return cp == 0x0E1B || cp == 0x0E1D || cp == 0x0E1F || cp == 0x0E2C;  // ป ฝ ฟ ฬ
+}
 
 constexpr Anchor anchorFor(const uint32_t cp) {
   switch (cp) {
@@ -60,19 +67,30 @@ constexpr Anchor anchorFor(const uint32_t cp) {
     case 0x05B9:  // holam: above the letter's left corner
     case 0x05C2:  // sin dot: over the letter's left arm
       return Anchor::LeftNative;
+    case 0x0E38:  // Thai sara u
+    case 0x0E39:  // Thai sara uu
+    case 0x0E3A:  // Thai phinthu
+      return Anchor::ThaiBelow;
     default:
+      if (cp == 0x0E31 || (cp >= 0x0E34 && cp <= 0x0E37) || (cp >= 0x0E47 && cp <= 0x0E4E)) {
+        return Anchor::ThaiAbove;
+      }
       return Anchor::CenterRaised;
   }
 }
 
 /// Horizontal offset from the base bitmap's left edge to the mark bitmap's
-/// left edge for a given anchor.
-constexpr int anchorShift(const Anchor anchor, const int baseWidth, const int markWidth) {
+/// left edge for a given anchor.  baseCp only matters for Thai above marks,
+/// which move left off the stem of a tall consonant (ป ฝ ฟ ฬ).
+constexpr int anchorShift(const Anchor anchor, const int baseWidth, const int markWidth, const uint32_t baseCp = 0) {
   switch (anchor) {
     case Anchor::LeftNative:
       return 0;
     case Anchor::RightNative:
+    case Anchor::ThaiBelow:
       return baseWidth - markWidth;
+    case Anchor::ThaiAbove:
+      return baseWidth - markWidth - (isThaiTallConsonant(baseCp) ? baseWidth / 4 : 0);
     default:
       return baseWidth / 2 - markWidth / 2;
   }
@@ -81,16 +99,17 @@ constexpr int anchorShift(const Anchor anchor, const int baseWidth, const int ma
 /// Compute the cursor-X at which to render a combining mark so its bitmap
 /// lands at its anchor position over the base glyph's bitmap.
 constexpr int anchorOver(const Anchor anchor, const int baseCursorPos, const int baseLeft, const int baseWidth,
-                         const int markLeft, const int markWidth) {
-  return baseCursorPos + baseLeft + anchorShift(anchor, baseWidth, markWidth) - markLeft;
+                         const int markLeft, const int markWidth, const uint32_t baseCp = 0) {
+  return baseCursorPos + baseLeft + anchorShift(anchor, baseWidth, markWidth, baseCp) - markLeft;
 }
 
 /// Rotated-90CW variant of anchorOver.  In the rotated coordinate system
 /// renderCharImpl uses (cursorY - left) instead of (cursorX + left), so
 /// every left/width term inverts sign.
 constexpr int anchorOverRotated90CW(const Anchor anchor, const int baseCursorPos, const int baseLeft,
-                                    const int baseWidth, const int markLeft, const int markWidth) {
-  return baseCursorPos - baseLeft - anchorShift(anchor, baseWidth, markWidth) + markLeft;
+                                    const int baseWidth, const int markLeft, const int markWidth,
+                                    const uint32_t baseCp = 0) {
+  return baseCursorPos - baseLeft - anchorShift(anchor, baseWidth, markWidth, baseCp) + markLeft;
 }
 
 /// For combining marks that sit entirely above the baseline, compute how many
@@ -104,6 +123,22 @@ constexpr int raiseAboveBase(const Anchor anchor, const int markTop, const int m
   if (markTop - markHeight <= 0) return 0;
   const int gap = markTop - markHeight - baseTop;
   return (gap < MIN_GAP_PX) ? (MIN_GAP_PX - gap) : 0;
+}
+
+/// Pixels to raise a mark on the current base.  stackTop is the top of the
+/// last ThaiAbove mark drawn on this base (0 when there is none), so a tone
+/// mark after an upper vowel clears that vowel instead of overlapping it.
+constexpr int raiseFor(const Anchor anchor, const int markTop, const int markHeight, const int baseTop,
+                       const int stackTop) {
+  if (anchor != Anchor::ThaiAbove) return raiseAboveBase(anchor, markTop, markHeight, baseTop);
+  if (stackTop <= 0) return 0;
+  const int gap = markTop - markHeight - stackTop;
+  return (gap < MIN_GAP_PX) ? (MIN_GAP_PX - gap) : 0;
+}
+
+/// The stackTop to pass for the next mark on the same base.
+constexpr int stackTopAfter(const Anchor anchor, const int markTop, const int raiseBy, const int stackTop) {
+  return anchor == Anchor::ThaiAbove ? markTop + raiseBy : stackTop;
 }
 
 }  // namespace combiningMark

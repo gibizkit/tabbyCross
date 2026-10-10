@@ -19,6 +19,7 @@ void EpdFont::getTextBounds(const char* string, const int startX, const int star
   int lastBaseLeft = 0;
   int lastBaseWidth = 0;
   int lastBaseTop = 0;
+  int lastMarkStackTop = 0;
   int32_t prevAdvanceFP = 0;  // 12.4 fixed-point: prev glyph's advance + next kern for snap
   uint32_t cp;
   uint32_t prevCp = 0;
@@ -41,12 +42,17 @@ void EpdFont::getTextBounds(const char* string, const int startX, const int star
         lastBaseLeft = 0;
         lastBaseWidth = 0;
         lastBaseTop = 0;
+        lastMarkStackTop = 0;
       }
       continue;
     }
 
     const combiningMark::Anchor anchor = combiningMark::anchorFor(cp);
-    const int raiseBy = isCombining ? combiningMark::raiseAboveBase(anchor, glyph->top, glyph->height, lastBaseTop) : 0;
+    const int raiseBy =
+        isCombining ? combiningMark::raiseFor(anchor, glyph->top, glyph->height, lastBaseTop, lastMarkStackTop) : 0;
+    if (isCombining) {
+      lastMarkStackTop = combiningMark::stackTopAfter(anchor, glyph->top, raiseBy, lastMarkStackTop);
+    }
 
     if (!isCombining && prevCp != 0) {
       const auto kernFP = getKerning(prevCp, cp);  // 4.4 fixed-point kern
@@ -54,7 +60,7 @@ void EpdFont::getTextBounds(const char* string, const int startX, const int star
     }
 
     const int glyphBaseX = isCombining ? combiningMark::anchorOver(anchor, lastBaseX, lastBaseLeft, lastBaseWidth,
-                                                                   glyph->left, glyph->width)
+                                                                   glyph->left, glyph->width, prevCp)
                                        : lastBaseX;
     const int glyphBaseY = startY - raiseBy;
 
@@ -67,6 +73,7 @@ void EpdFont::getTextBounds(const char* string, const int startX, const int star
       lastBaseLeft = glyph->left;
       lastBaseWidth = glyph->width;
       lastBaseTop = glyph->top;
+      lastMarkStackTop = 0;
       prevAdvanceFP = glyph->advanceX;  // 12.4 fixed-point
       prevCp = cp;
     }

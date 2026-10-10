@@ -101,5 +101,14 @@ inline bool utf8IsCombiningMark(const uint32_t cp) {
   return (cp >= 0x0300 && cp <= 0x036F)      // Combining Diacritical Marks
          || (cp >= 0x1DC0 && cp <= 0x1DFF)   // Combining Diacritical Marks Supplement
          || (cp >= 0x20D0 && cp <= 0x20FF)   // Combining Diacritical Marks for Symbols
-         || (cp >= 0xFE20 && cp <= 0xFE2F);  // Combining Half Marks
+         || (cp >= 0xFE20 && cp <= 0xFE2F)   // Combining Half Marks
+         || cp == 0x0E31                     // Thai mai han-akat
+         || (cp >= 0x0E34 && cp <= 0x0E3A)   // Thai upper/lower vowels, phinthu
+         || (cp >= 0x0E47 && cp <= 0x0E4E);  // Thai maitaikhu, tone marks, thanthakhat, nikhahit, yamakkan
 }
+
+// Split each Thai sara am (U+0E33) into nikhahit (U+0E4D) + sara aa (U+0E32),
+// moving the nikhahit before any tone marks on the same consonant. Without
+// mark-to-mark positioning in the fonts, the tone in "น้ำ" would otherwise
+// collide with the circle that sara am draws over the consonant.
+std::string utf8SplitThaiSaraAm(const std::string& in);
