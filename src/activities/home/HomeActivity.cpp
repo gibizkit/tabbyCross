@@ -438,8 +438,26 @@ void HomeActivity::loop() {
   // Row height from the theme, not the metrics table: RoundedRaff draws
   // font-derived rows and the touch grid must match the visuals exactly.
   const int menuRowHeight = GUI.getMenuRowHeight(renderer);
-  const auto menuTouch = mappedInput.rowTouch(menuRow, menuTop, menuRowHeight + metrics.menuSpacing, renderedMenuCount,
-                                              0, INT32_MAX, menuRowHeight);
+  const int menuColumns = std::max(1, GUI.homeMenuColumns());
+  const int menuRowCount = (renderedMenuCount + menuColumns - 1) / menuColumns;
+  auto menuTouch = mappedInput.rowTouch(menuRow, menuTop, menuRowHeight + metrics.menuSpacing, menuRowCount, 0,
+                                        INT32_MAX, menuRowHeight);
+  if (menuTouch != MappedInputManager::RowTouch::None && menuColumns > 1) {
+    // Grid menus (ShelfTheme): same cell geometry as the theme's drawButtonMenu.
+    const int cellWidth =
+        (content.width - 2 * metrics.contentSidePadding - (menuColumns - 1) * metrics.menuSpacing) / menuColumns;
+    const int rowTop = menuTop + menuRow * (menuRowHeight + metrics.menuSpacing);
+    int menuCol = -1;
+    const auto colTouch =
+        mappedInput.colTouch(menuCol, content.x + metrics.contentSidePadding, cellWidth + metrics.menuSpacing,
+                             menuColumns, rowTop, rowTop + menuRowHeight, cellWidth);
+    const int cell = menuRow * menuColumns + menuCol;
+    if (colTouch == MappedInputManager::RowTouch::None || cell >= renderedMenuCount) {
+      menuTouch = MappedInputManager::RowTouch::None;
+    } else {
+      menuRow = cell;
+    }
+  }
   if (menuTouch != MappedInputManager::RowTouch::None) {
     const int touchedIndex =
         metrics.homeContinueReadingInMenu ? menuRow : menuRow + static_cast<int>(recentBooks.size());

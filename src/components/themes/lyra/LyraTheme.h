@@ -99,4 +99,7 @@ class LyraTheme : public BaseTheme {
                            std::function<bool()> storeCoverBuffer) const override;
   void drawEmptyRecents(const GfxRenderer& renderer, const Rect rect) const;
   bool showsFileIcons() const override { return true; }
+
+ protected:
+  static const uint8_t* iconFor(UIIcon icon);
 };

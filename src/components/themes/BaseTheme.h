@@ -291,6 +291,9 @@ class BaseTheme {
   // Thumb generation height for home covers; 0 means use metrics.homeCoverHeight.
   // Themes with slots wider than 0.6 aspect override this so covers still fill.
   virtual int homeCoverThumbHeight(const GfxRenderer&) const { return 0; }
+  // Home menu columns. Cells are laid out left to right, then top to bottom,
+  // with metrics.menuSpacing between them in both directions.
+  virtual int homeMenuColumns() const { return 1; }
 
   // Shared constants and helpers for battery drawing (used by all themes)
   static constexpr int batteryPercentSpacing = 4;
