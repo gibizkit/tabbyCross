@@ -4,6 +4,7 @@
 #include <GfxRenderer.h>
 #include <Logging.h>
 #include <Memory.h>
+#include <ThaiWordBreak.h>
 #include <Utf8.h>
 
 #include <algorithm>
@@ -520,7 +521,10 @@ void ParsedText::addWord(std::string word, const EpdFontFamily::Style fontStyle,
     wordVisibleOffsetDeltas.reserve(newCapacity);
   };
 
-  if (auto breakOffsets = cjkCharacterBreakByteOffsets(word); !breakOffsets.empty()) {
+  // CJK breaks between characters, Thai between dictionary words; both without a space.
+  auto breakOffsets = cjkCharacterBreakByteOffsets(word);
+  if (breakOffsets.empty()) breakOffsets = thai::wordBreakByteOffsets(word);
+  if (!breakOffsets.empty()) {
     // CJK-heavy paragraphs can push hundreds of tiny tokens quickly when CSS toggles
     // inline styles. Reserve once up front to avoid repeated vector growth reallocations.
     ensureTokenCapacity(breakOffsets.size() + 1);

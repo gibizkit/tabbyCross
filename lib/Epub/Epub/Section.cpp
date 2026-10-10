@@ -61,7 +61,8 @@ namespace {
 // v51: Preserve paragraph continuity and top spacing across soft flushes.
 // v52: Missing full-block and black-square symbols now have visible widths.
 // v53: Thai marks are zero-width combining marks; sara am is split into nikhahit + sara aa.
-constexpr uint8_t SECTION_FILE_VERSION = 53;
+// v54: Thai text breaks between dictionary words without a space.
+constexpr uint8_t SECTION_FILE_VERSION = 54;
 // Written into the version field while a build is in progress; patched to
 // SECTION_FILE_VERSION only when the build is finalized. An abandoned /
 // crash-interrupted .bin therefore carries version 0, which loadSectionFile rejects
